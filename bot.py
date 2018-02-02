@@ -336,7 +336,12 @@ def get_last_name_orcid(subject):
 
     resp = req.json()
 
-    return resp['orcid-profile']['orcid-bio']['personal-details']['family-name']['value']
+    try:
+        return resp['orcid-profile']['orcid-bio']['personal-details']['family-name']['value']
+    except KeyError:
+        return subject
+    
+    return subject
 
 
 def parse_orcid_id(value):
