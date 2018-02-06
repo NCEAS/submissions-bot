@@ -328,7 +328,7 @@ def get_last_name_dn(subject):
 def get_last_name_orcid(subject):
     orcid_id = parse_orcid_id(subject)
     
-    req = requests.get("/".join(["http://pub.orcid.org", orcid_id]),
+    req = requests.get("/".join(["http://pub.orcid.org", "v1.2", orcid_id]),
                        headers={'Accept':'application/orcid+json'})
     
     if req.status_code != 200:
