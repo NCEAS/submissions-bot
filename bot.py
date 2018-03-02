@@ -328,8 +328,8 @@ def get_last_name_dn(subject):
 def get_last_name_orcid(subject):
     orcid_id = parse_orcid_id(subject)
     
-    req = requests.get("/".join(["http://pub.orcid.org", "v1.2", orcid_id]),
-                       headers={'Accept':'application/orcid+json'})
+    req = requests.get("/".join(["https://pub.orcid.org", "v2.1", orcid_id]),
+                       headers={'Accept':'application/json'})
     
     if req.status_code != 200:
         return subject
@@ -337,7 +337,7 @@ def get_last_name_orcid(subject):
     resp = req.json()
 
     try:
-        return resp['orcid-profile']['orcid-bio']['personal-details']['family-name']['value']
+        return resp['person']['name']['family-name']['value']
     except KeyError:
         return subject
     
