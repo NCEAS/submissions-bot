@@ -270,14 +270,9 @@ def get_all_versions(pid):
 # RT functions
 
 def ticket_find(pid):
-    # Strip version stringn from PID
-    # i.e. arctic-data.X.Y => arctic-data.X
-    # so a new ticket isn't created for updates
-    tokens = pid.split('.')
-    pid_noversion = '.'.join(tokens[0:(len(tokens)-1)])
+	versions = get_all_versions(pid)
 
-    title = '{}'.format(pid_noversion)
-    results = TRACKER.search(Queue='arcticdata', Subject__like=title)
+    results = TRACKER.search(Queue='arcticdata', Subject__like=versions[0])
     ids = [t['id'].replace('ticket/', '') for t in results]
 
     if len(ids) > 0:
