@@ -212,6 +212,61 @@ def elide_text(text, at=50):
     return out
 
 
+def get_previous_version(pid): 
+    #TODO - add check for length = 1 after `obsoletes = root.findall('.//doc/str')`?
+
+    url = str(MN_BASE_URL + '/query/solr?q=identifier:"' + pid + '"' +
+              "&fl=obsoletes")
+    
+    req = requests.get(url, headers = { "Authorization" : " ".join(["Bearer", TOKEN]) })
+    
+    if req.status_code != 200:
+        return None
+    
+    root = ET.fromstring(req.text)
+    obsoletes = root.findall('.//doc/str')
+    
+    if len(obsoletes) == 0:
+        return None
+    
+    return(obsoletes[0].text)
+    
+    
+def get_next_version(pid):
+    
+    url = str(MN_BASE_URL + '/query/solr?q=identifier:"' + pid + '"' +
+              "&fl=obsoletedBy")
+    
+    req = requests.get(url, headers = { "Authorization" : " ".join(["Bearer", TOKEN]) })
+    
+    if req.status_code != 200:
+        return None
+    
+    root = ET.fromstring(req.text)
+    obsoletedBy = root.findall('.//doc/str')
+    
+    if len(obsoletedBy) == 0:
+        return None
+    
+    return(obsoletedBy[0].text)
+    
+    
+def get_all_versions(pid): 
+    versions = [pid]
+    
+    previous_version = get_previous_version(pid)
+    while previous_version is not None: 
+        versions.insert(0, previous_version)
+        previous_version = get_previous_version(previous_version)
+        
+    next_version = get_next_version(pid)
+    while next_version is not None:
+        versions.append(next_version)
+        next_version = get_next_version(next_version)
+        
+    return(versions)
+
+
 # RT functions
 
 def ticket_find(pid):
