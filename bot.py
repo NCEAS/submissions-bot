@@ -163,13 +163,22 @@ def get_whitelist():
 def get_metadata_pids(doc):
     metadata = []
 
+    # Get whitelist of admin orcids
+    whitelist = get_whitelist()
+
     # Filter to EML 2.1.1 objects
     for o in doc.findall("objectInfo"):
         format_id = o.find('formatId').text
         pid = o.find('identifier').text
+        submitter = o.find('submitter').text
+        fileName = o.find('fileName').text
 
-        if format_id == EML_FMT_ID and (pid.startswith(PID_STARTSWITH) or pid.startswith(PID_STARTSWITH_ALT)):
+        if format_id == EML_FMT_ID and submitter not in whitelist:
             metadata.append(o.find('identifier').text)
+
+        # Add case to catch failed submissions 
+        if "eml_draft" in fileName: 
+            metadata.append(o.find('fileName').text)
 
     return metadata
 
