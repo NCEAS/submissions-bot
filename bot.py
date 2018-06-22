@@ -140,6 +140,26 @@ def get_object_identifiers(doc):
     return [o.find('identifier').text for o in doc.findall("objectInfo")]
 
 
+def get_whitelist():
+    # TODO - could change this so it takes an argument input?
+    
+    req = requests.get("https://cn.dataone.org/cn/v2/accounts/CN=arctic-data-admins,DC=dataone,DC=org")
+    
+    if req.status_code != 200: 
+     send_message("I failed to pull admin whitelist of orcid IDs") 
+     return False
+ 
+    root = ET.fromstring(req.text)
+    subjects = root.findall('.//person/subject')
+    
+    # probably better way to do this 
+    whitelist = []
+    for subject in subjects: 
+        whitelist.append(subject.text)
+
+    return whitelist    
+
+
 def get_metadata_pids(doc):
     metadata = []
 
