@@ -111,6 +111,43 @@ def create_tickets_message(metadata_pids, tickets):
 
 
 # Member Node functions
+def get_submitter(pid): 
+    url = str(MN_BASE_URL + '/query/solr?q=identifier:"' + pid + '"' +
+              "&fl=submitter")
+    
+    req = requests.get(url, headers = { "Authorization" : " ".join(["Bearer", TOKEN]) })
+    
+    if req.status_code != 200:
+        return None
+    
+    root = ET.fromstring(req.text)
+    submitter = root.findall('.//doc/str')
+    
+    if len(submitter) == 0:
+        send_message("I failed to find the submitter for: " + pid)
+        return None
+    
+    return(submitter[0].text) 
+    
+    
+def get_fileName(pid): 
+    url = str(MN_BASE_URL + '/query/solr?q=identifier:"' + pid + '"' +
+              "&fl=fileName")
+    
+    req = requests.get(url, headers = { "Authorization" : " ".join(["Bearer", TOKEN]) })
+    
+    if req.status_code != 200:
+        return None
+    
+    root = ET.fromstring(req.text)
+    fileName = root.findall('.//doc/str')
+    
+    if len(fileName) == 0:
+        send_message("I failed to find the fileName for: " + pid)
+        return None
+    
+    return(fileName[0].text) 
+
 
 def list_objects(from_date, to_date):
     url = ("{}/object?fromDate={}&toDate={}").format(MN_BASE_URL, from_date.strftime("%Y-%m-%dT%H:%M:%SZ"), to_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
@@ -170,15 +207,16 @@ def get_metadata_pids(doc):
     for o in doc.findall("objectInfo"):
         format_id = o.find('formatId').text
         pid = o.find('identifier').text
-        submitter = o.find('submitter').text
-        fileName = o.find('fileName').text
+        submitter = get_submitter(pid)
 
         if format_id == EML_FMT_ID and submitter not in whitelist:
             metadata.append(o.find('identifier').text)
 
-        # Add case to catch failed submissions 
-        if "eml_draft" in fileName: 
-            metadata.append(o.find('fileName').text)
+        # Add case to catch failed submissions (saved as txt files)
+        if format_id == "text/plain" and submitter not in whitelist:
+            fileName = get_fileName(pid)
+            if "eml_draft" in fileName:
+                metadata.append(o.find('identifier').text)
 
     return metadata
 
