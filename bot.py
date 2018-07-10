@@ -114,7 +114,6 @@ def create_tickets_message(metadata_pids, tickets):
 # Member Node functions
 def get_submitter(sysmeta): 
     # sysmeta is output from: get_system_metadata(pid)    
-    
     root = ET.fromstring(sysmeta.text)
     submitter = root.findall('.//submitter')
     
@@ -127,7 +126,6 @@ def get_submitter(sysmeta):
     
 def get_fileName(sysmeta): 
     # sysmeta is output from: get_system_metadata(pid) 
-    
     root = ET.fromstring(sysmeta.text)
     fileName = root.findall('.//fileName')
     
@@ -167,9 +165,7 @@ def get_object_identifiers(doc):
 
 
 def get_whitelist():
-    # TODO - could change this so it takes an argument input?
-    
-    req = requests.get("https://cn.dataone.org/cn/v2/accounts/CN=arctic-data-admins,DC=dataon,DC=org")
+    req = requests.get("https://cn.dataone.org/cn/v2/accounts/CN=arctic-data-admins,DC=dataone,DC=org")
     
     if req.status_code != 200: 
      send_message("I failed to pull admin whitelist of orcid IDs") 
@@ -177,7 +173,6 @@ def get_whitelist():
  
     root = ET.fromstring(req.text)
     subjects = root.findall('.//person/subject')
-    
     whitelist = [subject.text for subject in subjects]
 
     return whitelist     
@@ -193,7 +188,6 @@ def get_metadata_pids(doc):
     for o in doc.findall("objectInfo"):
         format_id = o.find('formatId').text
         pid = o.find('identifier').text
-        
         sysmeta = get_system_metadata(pid)
         submitter = get_submitter(sysmeta)
 
@@ -239,8 +233,7 @@ def elide_text(text, at=50):
 
 
 def get_system_metadata(pid): 
-    url = ('{}/meta/{}'.format(MN_BASE_URL, urllib.parse.quote_plus(pid)))
-    
+    url = '{}/meta/{}'.format(MN_BASE_URL, urllib.parse.quote_plus(pid))
     req = requests.get(url, headers = { "Authorization" : "Bearer {}".format(TOKEN) })
     
     if req.status_code != 200:
@@ -251,7 +244,6 @@ def get_system_metadata(pid):
 
 def get_previous_version(pid): 
     sysmeta = get_system_metadata(pid)
-    
     root = ET.fromstring(sysmeta.text)
     obsoletes = root.findall('.//obsoletes')
     
@@ -263,7 +255,6 @@ def get_previous_version(pid):
     
 def get_next_version(pid):
     sysmeta = get_system_metadata(pid)
-    
     root = ET.fromstring(sysmeta.text)
     obsoletedBy = root.findall('.//obsoletedBy')
     
