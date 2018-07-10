@@ -17,6 +17,7 @@ import requests.sessions
 from dotenv import load_dotenv
 import rt
 import re
+import urllib
 
 # Environment variables
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
