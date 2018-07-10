@@ -112,37 +112,27 @@ def create_tickets_message(metadata_pids, tickets):
 
 
 # Member Node functions
-def get_submitter(pid): 
-    url = ('{}/query/solr?q=identifier:"{}"&fl=submitter'.format(MN_BASE_URL, pid))
+def get_submitter(sysmeta): 
+    # sysmeta is output from: get_system_metadata(pid)    
     
-    req = requests.get(url, headers = { "Authorization" : " ".join(["Bearer", TOKEN]) })
-    
-    if req.status_code != 200:
-        return None
-    
-    root = ET.fromstring(req.text)
-    submitter = root.findall('.//doc/str')
+    root = ET.fromstring(sysmeta.text)
+    submitter = root.findall('.//submitter')
     
     if len(submitter) == 0:
-        send_message("I failed to find the submitter for: " + pid)
+        send_message("I failed to find the submitter for: {}".format(pid))
         return None
     
     return(submitter[0].text) 
     
     
-def get_fileName(pid): 
-    url = ('{}/query/solr?q=identifier:"{}"&fl=fileName'.format(MN_BASE_URL, pid))
-
-    req = requests.get(url, headers = { "Authorization" : " ".join(["Bearer", TOKEN]) })
+def get_fileName(sysmeta): 
+    # sysmeta is output from: get_system_metadata(pid) 
     
-    if req.status_code != 200:
-        return None
-    
-    root = ET.fromstring(req.text)
-    fileName = root.findall('.//doc/str')
+    root = ET.fromstring(sysmeta.text)
+    fileName = root.findall('.//fileName')
     
     if len(fileName) == 0:
-        send_message("I failed to find the fileName for: " + pid)
+        send_message("I failed to find the fileName for: {}".format(pid))
         return None
     
     return(fileName[0].text) 
@@ -195,7 +185,7 @@ def get_whitelist():
 
 def get_metadata_pids(doc):
     metadata = []
-
+    
     # Get whitelist of admin orcids
     whitelist = get_whitelist()
 
@@ -203,14 +193,16 @@ def get_metadata_pids(doc):
     for o in doc.findall("objectInfo"):
         format_id = o.find('formatId').text
         pid = o.find('identifier').text
-        submitter = get_submitter(pid)
+        
+        sysmeta = get_system_metadata(pid)
+        submitter = get_submitter(sysmeta)
 
         if format_id == EML_FMT_ID and submitter not in whitelist:
             metadata.append(o.find('identifier').text)
-
+        
         # Add case to catch failed submissions (saved as txt files)
         if format_id == "text/plain" and submitter not in whitelist:
-            fileName = get_fileName(pid)
+            fileName = get_fileName(sysmeta)
             if "eml_draft" in fileName:
                 metadata.append(o.find('identifier').text)
 
