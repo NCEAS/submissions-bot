@@ -112,8 +112,7 @@ def create_tickets_message(metadata_pids, tickets):
 
 # Member Node functions
 def get_submitter(pid): 
-    url = str(MN_BASE_URL + '/query/solr?q=identifier:"' + pid + '"' +
-              "&fl=submitter")
+    url = ('{}/query/solr?q=identifier:"{}"&fl=submitter'.format(MN_BASE_URL, pid))
     
     req = requests.get(url, headers = { "Authorization" : " ".join(["Bearer", TOKEN]) })
     
@@ -131,9 +130,8 @@ def get_submitter(pid):
     
     
 def get_fileName(pid): 
-    url = str(MN_BASE_URL + '/query/solr?q=identifier:"' + pid + '"' +
-              "&fl=fileName")
-    
+    url = ('{}/query/solr?q=identifier:"{}"&fl=fileName'.format(MN_BASE_URL, pid))
+
     req = requests.get(url, headers = { "Authorization" : " ".join(["Bearer", TOKEN]) })
     
     if req.status_code != 200:
@@ -250,19 +248,22 @@ def elide_text(text, at=50):
     return out
 
 
-def get_previous_version(pid): 
-    #TODO - add check for length = 1 after `obsoletes = root.findall('.//doc/str')`?
-
-    url = str(MN_BASE_URL + '/query/solr?q=identifier:"' + pid + '"' +
-              "&fl=obsoletes")
+def get_system_metadata(pid): 
+    url = ('{}/meta/{}'.format(MN_BASE_URL, urllib.parse.quote_plus(pid)))
     
-    req = requests.get(url, headers = { "Authorization" : " ".join(["Bearer", TOKEN]) })
+    req = requests.get(url, headers = { "Authorization" : "Bearer {}".format(TOKEN) })
     
     if req.status_code != 200:
         return None
     
-    root = ET.fromstring(req.text)
-    obsoletes = root.findall('.//doc/str')
+    return req 
+
+
+def get_previous_version(pid): 
+    sysmeta = get_system_metadata(pid)
+    
+    root = ET.fromstring(sysmeta.text)
+    obsoletes = root.findall('.//obsoletes')
     
     if len(obsoletes) == 0:
         return None
@@ -271,17 +272,10 @@ def get_previous_version(pid):
     
     
 def get_next_version(pid):
+    sysmeta = get_system_metadata(pid)
     
-    url = str(MN_BASE_URL + '/query/solr?q=identifier:"' + pid + '"' +
-              "&fl=obsoletedBy")
-    
-    req = requests.get(url, headers = { "Authorization" : " ".join(["Bearer", TOKEN]) })
-    
-    if req.status_code != 200:
-        return None
-    
-    root = ET.fromstring(req.text)
-    obsoletedBy = root.findall('.//doc/str')
+    root = ET.fromstring(sysmeta.text)
+    obsoletedBy = root.findall('.//obsoletedBy')
     
     if len(obsoletedBy) == 0:
         return None
