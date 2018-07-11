@@ -17,6 +17,7 @@ import requests.sessions
 from dotenv import load_dotenv
 import rt
 import re
+import urllib
 
 # Environment variables
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
@@ -111,6 +112,29 @@ def create_tickets_message(metadata_pids, tickets):
 
 
 # Member Node functions
+def get_submitter(sysmeta): 
+    # sysmeta is output from: get_system_metadata(pid)    
+    root = ET.fromstring(sysmeta.text)
+    submitter = root.findall('.//submitter')
+    
+    if len(submitter) == 0:
+        send_message("I failed to find the submitter for: {}".format(pid))
+        return None
+    
+    return(submitter[0].text) 
+    
+    
+def get_fileName(sysmeta): 
+    # sysmeta is output from: get_system_metadata(pid) 
+    root = ET.fromstring(sysmeta.text)
+    fileName = root.findall('.//fileName')
+    
+    if len(fileName) == 0:
+        send_message("I failed to find the fileName for: {}".format(pid))
+        return None
+    
+    return(fileName[0].text) 
+
 
 def list_objects(from_date, to_date):
     url = ("{}/object?fromDate={}&toDate={}").format(MN_BASE_URL, from_date.strftime("%Y-%m-%dT%H:%M:%SZ"), to_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
@@ -140,16 +164,41 @@ def get_object_identifiers(doc):
     return [o.find('identifier').text for o in doc.findall("objectInfo")]
 
 
+def get_whitelist():
+    req = requests.get("https://cn.dataone.org/cn/v2/accounts/CN=arctic-data-admins,DC=dataone,DC=org")
+    
+    if req.status_code != 200: 
+     send_message("I failed to pull admin whitelist of orcid IDs") 
+     return [] # return a blank list so bot doesn't crash 
+ 
+    root = ET.fromstring(req.text)
+    subjects = root.findall('.//person/subject')
+    whitelist = [subject.text for subject in subjects]
+
+    return whitelist     
+
+
 def get_metadata_pids(doc):
     metadata = []
+    
+    # Get whitelist of admin orcids
+    whitelist = get_whitelist()
 
     # Filter to EML 2.1.1 objects
     for o in doc.findall("objectInfo"):
         format_id = o.find('formatId').text
         pid = o.find('identifier').text
+        sysmeta = get_system_metadata(pid)
+        submitter = get_submitter(sysmeta)
 
-        if format_id == EML_FMT_ID and (pid.startswith(PID_STARTSWITH) or pid.startswith(PID_STARTSWITH_ALT)):
+        if format_id == EML_FMT_ID and submitter not in whitelist:
             metadata.append(o.find('identifier').text)
+        
+        # Add case to catch failed submissions (saved as txt files)
+        if format_id == "text/plain" and submitter not in whitelist:
+            fileName = get_fileName(sysmeta)
+            if "eml_draft" in fileName:
+                metadata.append(o.find('identifier').text)
 
     return metadata
 
@@ -183,17 +232,60 @@ def elide_text(text, at=50):
     return out
 
 
+def get_system_metadata(pid): 
+    url = '{}/meta/{}'.format(MN_BASE_URL, urllib.parse.quote_plus(pid))
+    req = requests.get(url, headers = { "Authorization" : "Bearer {}".format(TOKEN) })
+    
+    if req.status_code != 200:
+        return None
+    
+    return req 
+
+
+def get_previous_version(pid): 
+    sysmeta = get_system_metadata(pid)
+    root = ET.fromstring(sysmeta.text)
+    obsoletes = root.findall('.//obsoletes')
+    
+    if len(obsoletes) == 0:
+        return None
+    
+    return(obsoletes[0].text)
+    
+    
+def get_next_version(pid):
+    sysmeta = get_system_metadata(pid)
+    root = ET.fromstring(sysmeta.text)
+    obsoletedBy = root.findall('.//obsoletedBy')
+    
+    if len(obsoletedBy) == 0:
+        return None
+    
+    return(obsoletedBy[0].text)
+    
+    
+def get_all_versions(pid): 
+    versions = [pid]
+    
+    previous_version = get_previous_version(pid)
+    while previous_version is not None: 
+        versions.insert(0, previous_version)
+        previous_version = get_previous_version(previous_version)
+        
+    next_version = get_next_version(pid)
+    while next_version is not None:
+        versions.append(next_version)
+        next_version = get_next_version(next_version)
+        
+    return(versions)
+
+
 # RT functions
 
 def ticket_find(pid):
-    # Strip version stringn from PID
-    # i.e. arctic-data.X.Y => arctic-data.X
-    # so a new ticket isn't created for updates
-    tokens = pid.split('.')
-    pid_noversion = '.'.join(tokens[0:(len(tokens)-1)])
+	versions = get_all_versions(pid)
 
-    title = '{}'.format(pid_noversion)
-    results = TRACKER.search(Queue='arcticdata', Subject__like=title)
+    results = TRACKER.search(Queue='arcticdata', Subject__like=versions[0])
     ids = [t['id'].replace('ticket/', '') for t in results]
 
     if len(ids) > 0:
