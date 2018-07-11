@@ -283,7 +283,7 @@ def get_all_versions(pid):
 # RT functions
 
 def ticket_find(pid):
-	versions = get_all_versions(pid)
+    versions = get_all_versions(pid)
 
     results = TRACKER.search(Queue='arcticdata', Subject__like=versions[0])
     ids = [t['id'].replace('ticket/', '') for t in results]
