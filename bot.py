@@ -117,7 +117,7 @@ def get_submitter(sysmeta):
     root = ET.fromstring(sysmeta.text)
     submitter = root.findall('.//submitter')
     
-    if len(submitter) == 0:
+    if len(submitter) < 1:
         send_message("I failed to find the submitter for: {}".format(pid))
         return None
     
@@ -129,11 +129,26 @@ def get_fileName(sysmeta):
     root = ET.fromstring(sysmeta.text)
     fileName = root.findall('.//fileName')
     
-    if len(fileName) == 0:
+    if len(fileName) < 1:
         send_message("I failed to find the fileName for: {}".format(pid))
         return None
     
-    return(fileName[0].text) 
+    return(fileName[0].text)
+
+
+def get_dateUploaded(sysmeta):
+    # sysmeta is output from: get_system_metadata(pid) 
+    root = ET.fromstring(sysmeta.text)
+    dateUploaded = root.findall('.//dateUploaded') 
+    
+    if len(fileName) < 1:
+        send_message("I failed to find the dateUploaded for: {}".format(pid))
+        return None
+     
+    # reformat as datetime
+    value = datetime.strptime(dateUploaded[0].text[0:19], "%Y-%m-%dT%H:%M:%S")
+    
+    return value 
 
 
 def list_objects(from_date, to_date):
@@ -189,7 +204,12 @@ def get_metadata_pids(doc):
         format_id = o.find('formatId').text
         pid = o.find('identifier').text
         sysmeta = get_system_metadata(pid)
+        dateUploaded = get_dateUploaded(sysmeta)
         submitter = get_submitter(sysmeta)
+
+	# Filter out previously uploaded pids
+	if not from_date <= dateUploaded <= to_date:
+	    continue 
 
         if format_id == EML_FMT_ID and submitter not in whitelist:
             metadata.append(o.find('identifier').text)
