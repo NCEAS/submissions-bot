@@ -36,7 +36,6 @@ The bot then creates a ticket if a matching RT ticket is not found or comments o
   RT_URL="https://example.com/rt"                     # The URL of your RT install
   RT_USER="your_rt_user"                              # Your RT username
   RT_PASS="your_rt_passwrd"                           # Your RT password
-  RT_TICKET_OWNER="someone"                           # RT username to assign new tickets to
   TOKEN_PATH=./token                                  # Path to a DataONE authentication token
   ```
 
