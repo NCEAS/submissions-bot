@@ -193,7 +193,7 @@ def get_whitelist():
     return whitelist     
 
 
-def get_metadata_pids(doc):
+def get_metadata_pids(doc, from_date, to_date):
     metadata = []
     
     # Get whitelist of admin orcids
