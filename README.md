@@ -28,9 +28,9 @@ The bot then creates a ticket if a matching RT ticket is not found or comments o
 
   Include the following variables:
 
-  ```
+  ```text
   LASTFILE_PATH=LASTRUN             # Determines where the bot stores its state
-  MNBASE_URL="{}"                     # Member Node base URL
+  MNBASE_URL="{}"                   # Member Node base URL
   SLACK_WEBHOOK_URL="{URL}"         # Your Slack webhook URL
   RT_URL="https://your-org.com/rt"  # The URL of your RT install
   RT_USER="you"                     # Your RT username
