@@ -141,7 +141,7 @@ def get_dateUploaded(sysmeta):
     root = ET.fromstring(sysmeta.text)
     dateUploaded = root.findall('.//dateUploaded') 
     
-    if len(fileName) < 1:
+    if len(dateUploaded) < 1:
         send_message("I failed to find the dateUploaded for: {}".format(pid))
         return None
      
@@ -206,20 +206,18 @@ def get_metadata_pids(doc):
         sysmeta = get_system_metadata(pid)
         dateUploaded = get_dateUploaded(sysmeta)
         submitter = get_submitter(sysmeta)
-
-	# Filter out previously uploaded pids
-	if not from_date <= dateUploaded <= to_date:
-	    continue 
+        
+        if not (from_date <= dateUploaded <= to_date):
+            continue 
 
         if format_id == EML_FMT_ID and submitter not in whitelist:
             metadata.append(o.find('identifier').text)
         
-        # Add case to catch failed submissions (saved as txt files)
         if format_id == "text/plain" and submitter not in whitelist:
             fileName = get_fileName(sysmeta)
             if "eml_draft" in fileName:
                 metadata.append(o.find('identifier').text)
-
+                
     return metadata
 
 
