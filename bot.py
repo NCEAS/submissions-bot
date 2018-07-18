@@ -70,7 +70,7 @@ def get_last_run():
                 last_run = datetime.strptime(file_content.strip(), '%Y-%m-%dT%H:%M:%S.%f').replace(tzinfo=pytz.utc)
 
     if last_run is None:
-        last_run = datetime.utcnow()
+        last_run = datetime.utcnow().replace(tzinfo=pytz.utc)
 
     return last_run
 
@@ -112,7 +112,7 @@ def create_tickets_message(metadata_pids, tickets):
 
 
 # Member Node functions
-def get_submitter(sysmeta): 
+def get_submitter(sysmeta, pid): 
     # sysmeta is output from: get_system_metadata(pid)    
     root = ET.fromstring(sysmeta.text)
     submitter = root.findall('.//submitter')
@@ -124,7 +124,7 @@ def get_submitter(sysmeta):
     return(submitter[0].text) 
     
     
-def get_fileName(sysmeta): 
+def get_fileName(sysmeta, pid): 
     # sysmeta is output from: get_system_metadata(pid) 
     root = ET.fromstring(sysmeta.text)
     fileName = root.findall('.//fileName')
@@ -136,7 +136,7 @@ def get_fileName(sysmeta):
     return(fileName[0].text)
 
 
-def get_dateUploaded(sysmeta):
+def get_dateUploaded(sysmeta, pid):
     # sysmeta is output from: get_system_metadata(pid) 
     root = ET.fromstring(sysmeta.text)
     dateUploaded = root.findall('.//dateUploaded') 
@@ -145,10 +145,10 @@ def get_dateUploaded(sysmeta):
         send_message("I failed to find the dateUploaded for: {}".format(pid))
         return None
      
-    # reformat as datetime
-    value = datetime.strptime(dateUploaded[0].text[0:19], "%Y-%m-%dT%H:%M:%S")
+    # reformat as tz-aware datetime
+    value = datetime.strptime(dateUploaded[0].text[0:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=pytz.utc)
     
-    return value 
+    return value  
 
 
 def list_objects(from_date, to_date):
@@ -194,7 +194,7 @@ def get_whitelist():
 
 
 def get_metadata_pids(doc, from_date, to_date):
-    metadata = []
+    metadata_tuples = []
     
     # Get whitelist of admin orcids
     whitelist = get_whitelist()
@@ -204,22 +204,26 @@ def get_metadata_pids(doc, from_date, to_date):
         format_id = o.find('formatId').text
         pid = o.find('identifier').text
         sysmeta = get_system_metadata(pid)
-        dateUploaded = get_dateUploaded(sysmeta)
-        submitter = get_submitter(sysmeta)
+        dateUploaded = get_dateUploaded(sysmeta, pid)
+        submitter = get_submitter(sysmeta, pid)
         
         # Filter out previously uploaded pids
         if not from_date <= dateUploaded <= to_date:
             continue 
 
         if format_id == EML_FMT_ID and submitter not in whitelist:
-            metadata.append(o.find('identifier').text)
-        
+            metadata_tuples.append((o.find('identifier').text, dateUploaded))
+
         # Add case to catch failed submissions (saved as txt files)
         if format_id == "text/plain" and submitter not in whitelist:
-            fileName = get_fileName(sysmeta)
+            fileName = get_fileName(sysmeta, pid)
             if "eml_draft" in fileName:
-                metadata.append(o.find('identifier').text)
-                
+                metadata_tuples.append((o.find('identifier').text, dateUploaded))
+    
+    # Sort by date and return in list object
+    metadata_tuples = sorted(metadata_tuples, key = lambda pair: pair[1])
+    metadata = [pair[0] for pair in metadata_tuples]
+            
     return metadata
 
 
@@ -585,7 +589,7 @@ def main():
         return
 
     from_date = get_last_run()
-    to_date = datetime.utcnow()
+    to_date = datetime.utcnow().replace(tzinfo=pytz.utc)
 
     # Notify about new submissions/updates
     doc = list_objects(from_date, to_date)
