@@ -207,12 +207,14 @@ def get_metadata_pids(doc):
         dateUploaded = get_dateUploaded(sysmeta)
         submitter = get_submitter(sysmeta)
         
-        if not (from_date <= dateUploaded <= to_date):
+        # Filter out previously uploaded pids
+        if not from_date <= dateUploaded <= to_date:
             continue 
 
         if format_id == EML_FMT_ID and submitter not in whitelist:
             metadata.append(o.find('identifier').text)
         
+        # Add case to catch failed submissions (saved as txt files)
         if format_id == "text/plain" and submitter not in whitelist:
             fileName = get_fileName(sysmeta)
             if "eml_draft" in fileName:
