@@ -193,7 +193,7 @@ def get_whitelist():
     return whitelist     
 
 
-def get_metadata_pids(doc):
+def get_metadata_pids(doc, from_date, to_date):
     metadata = []
     
     # Get whitelist of admin orcids
@@ -591,7 +591,7 @@ def main():
     doc = list_objects(from_date, to_date)
     
     if get_count(doc) > 0:
-        metadata_pids = get_metadata_pids(doc)
+        metadata_pids = get_metadata_pids(doc, from_date, to_date)
         tickets = create_or_update_tickets(metadata_pids)
 
         if len(tickets) > 0:
