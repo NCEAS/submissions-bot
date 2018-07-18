@@ -20,6 +20,7 @@ The bot then creates a ticket if a matching RT ticket is not found or comments o
   - [requests](http://docs.python-requests.org/en/master/)
   - [python-dotenv](https://github.com/theskumar/python-dotenv)
   - [python-rt](https://gitlab.labs.nic.cz/labs/python-rt)
+  - [pytz](https://github.com/newvem/pytz)
 
 ## Setup
 
@@ -29,16 +30,42 @@ The bot then creates a ticket if a matching RT ticket is not found or comments o
   Include the following variables:
 
   ```text
-  LASTFILE_PATH=LASTRUN             # Determines where the bot stores its state
-  MNBASE_URL="{}"                   # Member Node base URL
-  SLACK_WEBHOOK_URL="{URL}"         # Your Slack webhook URL
-  RT_URL="https://your-org.com/rt"  # The URL of your RT install
-  RT_USER="you"                     # Your RT username
-  RT_PASS="{PASSWORD}"              # Your RT password
-  RT_TICKET_OWNER="someone"         # RT username to assign new tickets to
-  TOKEN_PATH=./token                # Path to a DataONE authentication token
+  LASTFILE_PATH=LASTRUN                               # Determines where the bot stores its state
+  MNBASE_URL="https://example.com/metacat/d1/mn/v2"   # Member Node base URL
+  SLACK_WEBHOOK_URL="{URL}"                           # Your Slack webhook URL
+  RT_URL="https://example.com/rt"                     # The URL of your RT install
+  RT_USER="your_rt_user"                              # Your RT username
+  RT_PASS="your_rt_passwrd"                           # Your RT password
+  RT_TICKET_OWNER="someone"                           # RT username to assign new tickets to
+  TOKEN_PATH=./token                                  # Path to a DataONE authentication token
   ```
 
 ## Running
 
 Run `python bot.py`
+
+## Developing & Testing
+
+The bot is super hard to test.
+This is partly because of how it was coded and also partly because it depends on the state of whichever Metacat and RT instance you point it to.
+
+Some of the techniques I use to test the bot as I develop are:
+
+- I keep a local copy of the `.env` file so the bot can be run locally. At the time of writing, the bot needs to be able to log into RT to start up at all.
+- I usually test under iPython with the autoreload magic
+  1. Start iPython with:
+  
+  ```sh
+  $ ipython
+  ```
+  2. Turn on autoreload
+
+  ```python
+  %loadext autoreload
+  %autoreload 2
+  ```
+
+  3. Run whatever function you want to test, being careful not to run `main()` unless you mean to
+
+I often want to test behavior that involves the bot seeing Objects modified within a certain time period.
+I manipulate the LASTRUN file as needed and usually can't remember the format it uses which is `%Y-%M-%dT%H:%H:%S`, e.g., `2018-07-17T23:05:01.744732`.
