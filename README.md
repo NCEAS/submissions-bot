@@ -68,3 +68,12 @@ Some of the techniques I use to test the bot as I develop are:
 
 I often want to test behavior that involves the bot seeing Objects modified within a certain time period.
 I manipulate the LASTRUN file as needed and usually can't remember the format it uses which is `%Y-%M-%dT%H:%H:%S`, e.g., `2018-07-17T23:05:01.744732`.
+
+Another way of testing the bot would be setting `.env` up as above but just replacing what's in
+
+```python
+if __name__ == "__main__":
+  main() # <--- Replace me!
+```
+
+with the code you want to test and running the bot with `python bot.py`.
