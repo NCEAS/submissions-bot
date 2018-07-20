@@ -67,7 +67,8 @@ def get_last_run():
             file_content = f.readline()
 
             if len(file_content) > 0:
-                last_run = datetime.strptime(file_content.strip(), '%Y-%m-%dT%H:%M:%S.%f').replace(tzinfo=pytz.utc)
+                # Use [0:26] to remove trailing '+00:00' added by .isoformat() in save_last_run and add tzinfo back with .replace
+                last_run = datetime.strptime(file_content.strip()[0:26], '%Y-%m-%dT%H:%M:%S.%f').replace(tzinfo=pytz.utc)
 
     if last_run is None:
         last_run = datetime.utcnow().replace(tzinfo=pytz.utc)
