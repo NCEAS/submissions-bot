@@ -137,6 +137,18 @@ def get_fileName(sysmeta, pid):
     return(fileName[0].text)
 
 
+def get_formatId(sysmeta, pid): 
+    # sysmeta is output from: get_system_metadata(pid) 
+    root = ET.fromstring(sysmeta.text)
+    formatId = root.findall('.//formatId')
+    
+    if len(formatId) < 1:
+        send_message("I failed to find the fileName for: {}".format(pid))
+        return None
+    
+    return(formatId[0].text)
+
+
 def get_dateUploaded(sysmeta, pid):
     # sysmeta is output from: get_system_metadata(pid) 
     root = ET.fromstring(sysmeta.text)
@@ -231,6 +243,12 @@ def get_metadata_pids(doc, from_date, to_date):
 def get_dataset_title(pid):
     # Stop now if the token isn't set up
     if TOKEN is None:
+        return None
+
+    # Check for 'eml_draft' text files 
+    sysmeta = get_system_metadata(pid)
+    formatId = get_formatId(sysmeta, pid)
+    if not formatId == EML_FMT_ID:
         return None
 
     # Grab the doc
