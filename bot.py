@@ -72,6 +72,7 @@ def get_last_run():
 
     if last_run is None:
         last_run = datetime.utcnow().replace(tzinfo=pytz.utc)
+        send_message("I failed to read in the last run time.  Setting last run to {} .  Please check for any missed submissions in the past 5 minutes".format(datetime.utcnow()))
 
     return last_run
 
