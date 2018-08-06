@@ -139,6 +139,9 @@ def get_fileName(sysmeta, pid):
 
 
 def get_formatId(sysmeta, pid): 
+    if sysmeta is None:
+        return None
+        
     # sysmeta is output from: get_system_metadata(pid) 
     root = ET.fromstring(sysmeta.text)
     formatId = root.findall('.//formatId')
@@ -151,6 +154,9 @@ def get_formatId(sysmeta, pid):
 
 
 def get_dateUploaded(sysmeta, pid):
+    if sysmeta is None:
+        return None
+
     # sysmeta is output from: get_system_metadata(pid) 
     root = ET.fromstring(sysmeta.text)
     dateUploaded = root.findall('.//dateUploaded') 
@@ -218,6 +224,10 @@ def get_metadata_pids(doc, from_date, to_date):
         format_id = o.find('formatId').text
         pid = o.find('identifier').text
         sysmeta = get_system_metadata(pid)
+
+        if sysmeta is None:
+            send_message("I failed to get the System Metadata for the Object with PID {} which is really weird.".format(pid))
+
         dateUploaded = get_dateUploaded(sysmeta, pid)
         submitter = get_submitter(sysmeta, pid)
         
