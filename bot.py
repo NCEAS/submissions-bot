@@ -141,7 +141,7 @@ def get_fileName(sysmeta, pid):
 def get_formatId(sysmeta, pid): 
     if sysmeta is None:
         return None
-        
+
     # sysmeta is output from: get_system_metadata(pid) 
     root = ET.fromstring(sysmeta.text)
     formatId = root.findall('.//formatId')
@@ -226,7 +226,8 @@ def get_metadata_pids(doc, from_date, to_date):
         sysmeta = get_system_metadata(pid)
 
         if sysmeta is None:
-            send_message("I failed to get the System Metadata for the Object with PID {} which is really weird.".format(pid))
+            send_message("I failed to get the System Metadata for the Object with the PID '{}' which is probably just because the accessPolicy didn't include 'arctic-data-admins' with at least read permission. This could be one of us doing some testing or someone using the DataONE API directly. Might be worth a look.".format(pid))
+            continue
 
         dateUploaded = get_dateUploaded(sysmeta, pid)
         submitter = get_submitter(sysmeta, pid)
