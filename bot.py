@@ -416,7 +416,7 @@ def subject_is_admin():
         headers = { "Authorization" : " ".join(["Bearer", TOKEN])})
 
     if req.status_code != 200:
-        send_message("I failed to validate my token which means I probably need a new token.")
+        send_message("A request to the dataone coordinating node failed. If this message occurs regularly I probably need a new token. If it's infrequent it's likely the node was experiencing issues.")
         return False
 
     root = ET.fromstring(req.text)
