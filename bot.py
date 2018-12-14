@@ -486,7 +486,7 @@ def get_last_name_orcid(subject):
 
     try:
         return resp['person']['name']['family-name']['value']
-    except KeyError:
+    except Exception:
         return subject
     
     return subject
