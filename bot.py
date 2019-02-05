@@ -269,6 +269,12 @@ def get_dataset_title(pid):
     if req.status_code != 200:
         return None
 
+    # Force requests to treat the responase as UTF-8. These requests come back
+    # without a specific encoding set in their Content-Type header and requests
+    # decides the encoding is ISO-8859-1 which results in Unicode data getting
+    # garbled
+    req.encoding = "utf-8";
+    
     doc = ET.fromstring(req.text)
     titles = doc.findall(".//title")
 
