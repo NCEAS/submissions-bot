@@ -114,42 +114,42 @@ def create_tickets_message(metadata_pids, tickets):
 
 
 # Member Node functions
-def get_submitter(sysmeta, pid): 
-    # sysmeta is output from: get_system_metadata(pid)    
+def get_submitter(sysmeta, pid):
+    # sysmeta is output from: get_system_metadata(pid)
     root = ET.fromstring(sysmeta.text)
     submitter = root.findall('.//submitter')
-    
+
     if len(submitter) < 1:
         send_message("I failed to find the submitter for: {}".format(pid))
         return None
-    
-    return(submitter[0].text) 
-    
-    
-def get_fileName(sysmeta, pid): 
-    # sysmeta is output from: get_system_metadata(pid) 
+
+    return(submitter[0].text)
+
+
+def get_fileName(sysmeta, pid):
+    # sysmeta is output from: get_system_metadata(pid)
     root = ET.fromstring(sysmeta.text)
     fileName = root.findall('.//fileName')
-    
+
     if len(fileName) < 1:
         send_message("I failed to find the fileName for: {}".format(pid))
         return None
-    
+
     return(fileName[0].text)
 
 
-def get_formatId(sysmeta, pid): 
+def get_formatId(sysmeta, pid):
     if sysmeta is None:
         return None
 
-    # sysmeta is output from: get_system_metadata(pid) 
+    # sysmeta is output from: get_system_metadata(pid)
     root = ET.fromstring(sysmeta.text)
     formatId = root.findall('.//formatId')
-    
+
     if len(formatId) < 1:
         send_message("I failed to find the fileName for: {}".format(pid))
         return None
-    
+
     return(formatId[0].text)
 
 
@@ -157,18 +157,18 @@ def get_dateUploaded(sysmeta, pid):
     if sysmeta is None:
         return None
 
-    # sysmeta is output from: get_system_metadata(pid) 
+    # sysmeta is output from: get_system_metadata(pid)
     root = ET.fromstring(sysmeta.text)
-    dateUploaded = root.findall('.//dateUploaded') 
-    
+    dateUploaded = root.findall('.//dateUploaded')
+
     if len(dateUploaded) < 1:
         send_message("I failed to find the dateUploaded for: {}".format(pid))
         return None
-     
+
     # reformat as tz-aware datetime
     value = datetime.strptime(dateUploaded[0].text[0:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=pytz.utc)
-    
-    return value  
+
+    return value
 
 
 def list_objects(from_date, to_date):
@@ -201,21 +201,21 @@ def get_object_identifiers(doc):
 
 def get_whitelist():
     req = requests.get("https://cn.dataone.org/cn/v2/accounts/CN=arctic-data-admins,DC=dataone,DC=org")
-    
-    if req.status_code != 200: 
-     send_message("I failed to pull admin whitelist of orcid IDs") 
-     return [] # return a blank list so bot doesn't crash 
- 
+
+    if req.status_code != 200:
+     send_message("I failed to pull admin whitelist of orcid IDs")
+     return [] # return a blank list so bot doesn't crash
+
     root = ET.fromstring(req.text)
     subjects = root.findall('.//person/subject')
     whitelist = [subject.text for subject in subjects]
 
-    return whitelist     
+    return whitelist
 
 
 def get_metadata_pids(doc, from_date, to_date):
     metadata_tuples = []
-    
+
     # Get whitelist of admin orcids
     whitelist = get_whitelist()
 
@@ -231,10 +231,10 @@ def get_metadata_pids(doc, from_date, to_date):
 
         dateUploaded = get_dateUploaded(sysmeta, pid)
         submitter = get_submitter(sysmeta, pid)
-        
+
         # Filter out previously uploaded pids
         if not from_date <= dateUploaded <= to_date:
-            continue 
+            continue
 
         if format_id == EML_FMT_ID and submitter not in whitelist:
             metadata_tuples.append((o.find('identifier').text, dateUploaded))
@@ -244,11 +244,11 @@ def get_metadata_pids(doc, from_date, to_date):
             fileName = get_fileName(sysmeta, pid)
             if "eml_draft" in fileName:
                 metadata_tuples.append((o.find('identifier').text, dateUploaded))
-    
+
     # Sort by date and return in list object
     metadata_tuples = sorted(metadata_tuples, key = lambda pair: pair[1])
     metadata = [pair[0] for pair in metadata_tuples]
-            
+
     return metadata
 
 
@@ -257,7 +257,7 @@ def get_dataset_title(pid):
     if TOKEN is None:
         return None
 
-    # Check for 'eml_draft' text files 
+    # Check for 'eml_draft' text files
     sysmeta = get_system_metadata(pid)
     formatId = get_formatId(sysmeta, pid)
     if not formatId == EML_FMT_ID:
@@ -274,7 +274,7 @@ def get_dataset_title(pid):
     # decides the encoding is ISO-8859-1 which results in Unicode data getting
     # garbled
     req.encoding = "utf-8";
-    
+
     doc = ET.fromstring(req.text)
     titles = doc.findall(".//title")
 
@@ -293,51 +293,51 @@ def elide_text(text, at=50):
     return out
 
 
-def get_system_metadata(pid): 
+def get_system_metadata(pid):
     url = '{}/meta/{}'.format(MN_BASE_URL, urllib.parse.quote_plus(pid))
     req = requests.get(url, headers = { "Authorization" : "Bearer {}".format(TOKEN) })
-    
+
     if req.status_code != 200:
         return None
-    
-    return req 
+
+    return req
 
 
-def get_previous_version(pid): 
+def get_previous_version(pid):
     sysmeta = get_system_metadata(pid)
     root = ET.fromstring(sysmeta.text)
     obsoletes = root.findall('.//obsoletes')
-    
+
     if len(obsoletes) == 0:
         return None
-    
+
     return(obsoletes[0].text)
-    
-    
+
+
 def get_next_version(pid):
     sysmeta = get_system_metadata(pid)
     root = ET.fromstring(sysmeta.text)
     obsoletedBy = root.findall('.//obsoletedBy')
-    
+
     if len(obsoletedBy) == 0:
         return None
-    
+
     return(obsoletedBy[0].text)
-    
-    
-def get_all_versions(pid): 
+
+
+def get_all_versions(pid):
     versions = [pid]
-    
+
     previous_version = get_previous_version(pid)
-    while previous_version is not None: 
+    while previous_version is not None:
         versions.insert(0, previous_version)
         previous_version = get_previous_version(previous_version)
-        
+
     next_version = get_next_version(pid)
     while next_version is not None:
         versions.append(next_version)
         next_version = get_next_version(next_version)
-        
+
     return(versions)
 
 
@@ -382,7 +382,7 @@ def ticket_create(pid):
 
 
 def create_ticket_text(pid):
-    template = """A new submission or update to an existing submission just came in. View it here: https://arcticdata.io/catalog/#view/{}. This ticket was automatically created by the submissions bot because the PID {} was created/modified. 
+    template = """A new submission or update to an existing submission just came in. View it here: https://arcticdata.io/catalog/#view/{}. This ticket was automatically created by the submissions bot because the PID {} was created/modified.
     Be aware that this URL and PID may not represent the latest version.")"""
 
     return template.format(pid, pid)
@@ -459,10 +459,10 @@ def get_last_name_dn(subject):
 
 def get_last_name_orcid(subject):
     orcid_id = parse_orcid_id(subject)
-    
+
     req = requests.get("/".join(["https://pub.orcid.org", "v2.1", orcid_id]),
                        headers={'Accept':'application/json'})
-    
+
     if req.status_code != 200:
         return subject
 
@@ -472,7 +472,7 @@ def get_last_name_orcid(subject):
         return resp['person']['name']['family-name']['value']
     except Exception:
         return subject
-    
+
     return subject
 
 
@@ -514,7 +514,7 @@ def get_recent_incoming_correspondence(ticket, after):
     if req.status_code != 200:
         raise Exception("Failed to get ticket history.")
 
-    incoming = [corr for corr in req.content.decode('utf-8').split('\n') if re.search(r'\d+: Correspondence added by .+@.+', corr) or re.search(r'\d+: Ticket created by .+@.+', corr)]    
+    incoming = [corr for corr in req.content.decode('utf-8').split('\n') if re.search(r'\d+: Correspondence added by .+@.+', corr) or re.search(r'\d+: Ticket created by .+@.+', corr)]
 
     if len(incoming) == 0:
         return correspondences
@@ -534,7 +534,7 @@ def get_recent_incoming_correspondence(ticket, after):
 
         if transaction['Created'] <= after:
             continue
-        
+
         correspondences.append(format_history_entry(transaction))
 
     return correspondences
@@ -543,7 +543,7 @@ def get_recent_incoming_correspondence(ticket, after):
 def parse_rt_transaction(transaction):
     lines = transaction.split('\n')
     msg = {}
-    
+
     for i in range(len(lines)):
         line = lines[i]
 
@@ -580,7 +580,7 @@ def format_history_entry(msg, trunc_at=200):
         ellipsis = '...'
     else:
         ellipsis = ''
-    
+
     if msg['Type'] == 'Correspond':
         msg['Type'] = 'Correspondence'
     elif msg['Type'] == 'Create':
@@ -604,7 +604,7 @@ def main():
 
     # Notify about new submissions/updates
     doc = list_objects(from_date, to_date)
-    
+
     if get_count(doc) > 0:
         metadata_pids = get_metadata_pids(doc, from_date, to_date)
         tickets = create_or_update_tickets(metadata_pids)

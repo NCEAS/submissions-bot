@@ -53,7 +53,7 @@ Some of the techniques I use to test the bot as I develop are:
 - I keep a local copy of the `.env` file so the bot can be run locally. At the time of writing, the bot needs to be able to log into RT to start up at all.
 - I usually test under iPython with the autoreload magic
   1. Start iPython with:
-  
+
   ```sh
   $ ipython
   ```
