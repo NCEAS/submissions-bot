@@ -411,28 +411,6 @@ def create_or_update_tickets(identifiers):
     return tickets
 
 
-def subject_is_admin():
-    """Helps the bot find out if its token will make its requests act as 
-    a member of arctic-data-admins."""
-    if TOKEN is None:
-        send_message("I was unable to find my token which means I need some help.")
-        return False
-
-    req = requests.get('https://cn.dataone.org/cn/v2/diag/subject',
-        headers = { "Authorization" : " ".join(["Bearer", TOKEN])})
-
-    if req.status_code != 200:
-        send_message("A request to the dataone coordinating node failed. If this message occurs regularly I probably need a new token. If it's infrequent it's likely the node was experiencing issues.")
-        return False
-
-    root = ET.fromstring(req.text)
-    groups = [e.text for e in root.findall('.//person/isMemberOf')]
-
-    if 'CN=arctic-data-admins,DC=dataone,DC=org' not in groups:
-        return False
-
-    return True
-
 def get_sysmeta_submitter(pid):
     if TOKEN is None:
         return None
@@ -620,10 +598,6 @@ def main():
             test_slack()
 
             return
-
-    if not subject_is_admin():
-        send_message("My authentication token isn't configured properly so I can't give tickets good titles like I usually do. RT tickets will still be created for new submissions though.")
-        return
 
     from_date = get_last_run()
     to_date = datetime.utcnow().replace(tzinfo=pytz.utc)
