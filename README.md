@@ -4,6 +4,8 @@ Alerts a Slack channel (via webhook) of recently-modified objects from
 [`listObjects()`](http://jenkins-1.dataone.org/jenkins/job/API%20Documentation%20-%20trunk/ws/api-documentation/build/html/apis/MN_APIs.html#MNRead.listObjects) and creates tickets in
 [RT](https://www.bestpractical.com/rt-and-rtir) for new submissions and comments on already-created tickets.
 
+Note: If you're looking for deployment details about the bot, you might want to look at [the arctic-bot README](https://github.nceas.ucsb.edu/KNB/arctic-data/blob/master/datateam/How_To/arctic-bot.md) which outlines things such as how the bot actually runs.
+
 ## How the bot works
 
 Every ten minutes, the bot visits the Member Node's [/object](http://jenkins-1.dataone.org/jenkins/job/API%20Documentation%20-%20trunk/ws/api-documentation/build/html/apis/MN_APIs.html#MNRead.listObjects) endpoint and asks for a list of the objects that have been modified in the last ten minutes.
