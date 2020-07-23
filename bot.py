@@ -52,7 +52,9 @@ if TRACKER.login() is False:
 # Hard-coded variables
 PID_STARTSWITH = "arctic-data."
 PID_STARTSWITH_ALT = "autogen."
-EML_FMT_ID = "eml://ecoinformatics.org/eml-2.1.1"
+EML_FMT_ID = ["eml://ecoinformatics.org/eml-2.1.1",
+              "https://eml.ecoinformatics.org/eml-2.2.0",
+              "https://purl.dataone.org/portals-1.0.0"]
 
 
 # General functions
@@ -102,12 +104,20 @@ def test_slack():
     return r
 
 def create_tickets_message(metadata_pids, tickets):
-    message = "The following Objects were just created or updated:\n"
 
     for pid,ticket in zip(metadata_pids, tickets):
         ticket_info = TRACKER.get_ticket(ticket)
+        sys = get_system_metadata(pid)
+        formatid = get_formatId(sys, pid)
         ticket_url = "{}/Ticket/Display.html?id={}".format(RT_URL, ticket)
+
+        if formatid == "https://purl.dataone.org/portals-1.0.0":
+            message = "The following portals were just created or updated:\n"
+        else:
+            message = "The following datasets were just created or updated:\n"
+
         line = "- {} ({}) <{}|{}>\n".format(pid, get_last_name(pid), ticket_url, ticket_info['Subject'])
+
         message += line
 
     return message
@@ -236,7 +246,7 @@ def get_metadata_pids(doc, from_date, to_date):
         if not from_date <= dateUploaded <= to_date:
             continue
 
-        if format_id == EML_FMT_ID and submitter not in whitelist:
+        if format_id in EML_FMT_ID and submitter not in whitelist:
             metadata_tuples.append((o.find('identifier').text, dateUploaded))
 
         # Add case to catch failed submissions (saved as txt files)
@@ -260,7 +270,7 @@ def get_dataset_title(pid):
     # Check for 'eml_draft' text files
     sysmeta = get_system_metadata(pid)
     formatId = get_formatId(sysmeta, pid)
-    if not formatId == EML_FMT_ID:
+    if not formatId in EML_FMT_ID:
         return None
 
     # Grab the doc
@@ -269,14 +279,17 @@ def get_dataset_title(pid):
     if req.status_code != 200:
         return None
 
-    # Force requests to treat the responase as UTF-8. These requests come back
+    # Force requests to treat the response as UTF-8. These requests come back
     # without a specific encoding set in their Content-Type header and requests
     # decides the encoding is ISO-8859-1 which results in Unicode data getting
     # garbled
     req.encoding = "utf-8";
-
     doc = ET.fromstring(req.text)
-    titles = doc.findall(".//title")
+
+    if formatId == "https://purl.dataone.org/portals-1.0.0":
+        titles = doc.findall(".//label")
+    else:
+        titles = doc.findall(".//title")
 
     if len(titles) < 1:
         return None
@@ -376,16 +389,22 @@ def ticket_create(pid):
 
     ticket = TRACKER.create_ticket(Queue='arcticdata',
                                    Subject=subject,
-                                   Text=create_ticket_text(pid))
+                                   Text=create_ticket_text(pid, title))
 
     return ticket
 
 
-def create_ticket_text(pid):
-    template = """A new submission or update to an existing submission just came in. View it here: https://arcticdata.io/catalog/#view/{}. This ticket was automatically created by the submissions bot because the PID {} was created/modified.
-    Be aware that this URL and PID may not represent the latest version.")"""
+def create_ticket_text(pid, title):
+    sys = get_system_metadata(pid)
+    formatid = get_formatId(sys, pid)
 
-    return template.format(pid, pid)
+    if formatid == "https://purl.dataone.org/portals-1.0.0":
+        template = """A new submission or update to an existing submission just came in. View it here: https://arcticdata.io/catalog/portals/{}. This ticket was automatically created by the submissions bot because the PID {} was created/modified."""
+        return template.format(title, pid)
+    else:
+        template = """A new submission or update to an existing submission just came in. View it here: https://arcticdata.io/catalog/view/{}. This ticket was automatically created by the submissions bot because the PID {} was created/modified.
+            Be aware that this URL and PID may not represent the latest version.")"""
+        return template.format(pid, pid)
 
 
 def ticket_reply(ticket_id, identifier):
