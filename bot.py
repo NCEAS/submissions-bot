@@ -419,11 +419,13 @@ def create_or_update_tickets(identifiers):
         return tickets
 
     for identifier in identifiers:
+        sysmeta = get_system_metadata(identifier)
+        formatid = get_formatId(sysmeta, identifier)
         ticket = ticket_find(identifier)
 
         if ticket is None:
             tickets.append(ticket_create(identifier))
-        else:
+        elif ticket is not None and formatid != "https://purl.dataone.org/portals-1.0.0":
             ticket_reply(ticket, identifier)
             tickets.append(ticket)
 
