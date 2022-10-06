@@ -524,7 +524,7 @@ def get_tickets_with_new_incoming_correspondence(after):
 def get_recent_incoming_correspondence(ticket, after):
 
     # get a list of arcticdata queue members
-    r = requests.get(RT_URL+"REST/2.0/group/55040", headers={'Authorization': 'token '+RT_TOKEN}).json()
+    r = requests.get(RT_URL+"/REST/2.0/group/55040", headers={'Authorization': 'token '+RT_TOKEN}).json()
     datateam = [x['id'] for x in r['Members']]
     dt = '(?!' + '|'.join(datateam) + ').*'
 
