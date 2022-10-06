@@ -28,6 +28,7 @@ SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL")
 RT_URL = os.environ.get("RT_URL")
 RT_USER = os.environ.get("RT_USER")
 RT_PASS = os.environ.get("RT_PASS")
+RT_TOKEN = os.environ.get("RT_TOKEN")
 
 # Token handling code: Try to load the token at bot initialization
 # and leave it set to None if the token file is not found or not readable
@@ -521,6 +522,12 @@ def get_tickets_with_new_incoming_correspondence(after):
 
 
 def get_recent_incoming_correspondence(ticket, after):
+
+    # get a list of arcticdata queue members
+    r = requests.get(RT_URL+"REST/2.0/group/55040", headers={'Authorization': 'token '+RT_TOKEN}).json()
+    datateam = [x['id'] for x in r['Members']]
+    dt = '(?!' + '|'.join(datateam) + ').*'
+
     ticket_id = re.search(r'\d+', ticket['id']).group(0)
     correspondences = []
 
@@ -535,7 +542,8 @@ def get_recent_incoming_correspondence(ticket, after):
     if req.status_code != 200:
         raise Exception("Failed to get ticket history.")
 
-    incoming = [corr for corr in req.content.decode('utf-8').split('\n') if re.search(r'\d+: Correspondence added by .+@.+', corr) or re.search(r'\d+: Ticket created by .+@.+', corr)]
+    # get incoming correspondence, filtering out responses from datateam members
+    incoming = [corr for corr in req.content.decode('utf-8').split('\n') if re.search(r'\d+: Correspondence added by '+dt, corr) or re.search(r'\d+: Ticket created by .' + dt, corr)]
 
     if len(incoming) == 0:
         return correspondences
@@ -643,5 +651,5 @@ def main():
     save_last_run(to_date)
 
 
-if __name__ == "__main__":
-    main()
+#if __name__ == "__main__":
+ #   main()
