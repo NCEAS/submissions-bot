@@ -651,5 +651,5 @@ def main():
     save_last_run(to_date)
 
 
-#if __name__ == "__main__":
- #   main()
+if __name__ == "__main__":
+    main()
