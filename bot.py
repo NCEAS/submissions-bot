@@ -403,8 +403,7 @@ def create_ticket_text(pid, title):
         template = """A new submission or update to an existing submission just came in. View it here: https://arcticdata.io/catalog/portals/{}. This ticket was automatically created by the submissions bot because the PID {} was created/modified."""
         return template.format(title, pid)
     else:
-        template = """A new submission or update to an existing submission just came in. View it here: https://arcticdata.io/catalog/view/{}. This ticket was automatically created by the submissions bot because the PID {} was created/modified.
-            Be aware that this URL and PID may not represent the latest version.")"""
+        template = """A new submission or update to an existing submission just came in. View it here: https://arcticdata.io/catalog/view/{}. This ticket was automatically created by the submissions bot because the PID {} was created/modified. Be aware that this URL and PID may not represent the latest version.")"""
         return template.format(pid, pid)
 
 
