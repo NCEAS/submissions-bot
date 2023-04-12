@@ -22,6 +22,7 @@ The bot then creates a ticket if a matching RT ticket is not found or comments o
   - [requests](http://docs.python-requests.org/en/master/)
   - [python-dotenv](https://github.com/theskumar/python-dotenv)
   - [python-rt](https://gitlab.labs.nic.cz/labs/python-rt)
+    - Currently requires version 2.2.2
   - [pytz](https://github.com/newvem/pytz)
 
 - To try installing under Ubuntu 22.04 with python 3.7, install python from the deadsnakes PPA, then create a virtualenv for the app:
@@ -31,7 +32,7 @@ $ sudo add-apt-repository -P ppa:deadsnakes/ppa
 $ sudo apt update   
 $ sudo apt install python3.7
 $ sudo apt install python3.7-distutils
-$ mkvirtualenv -p python3.7 arcticbot
+$ mkvirtualenv -p python3.7 bot
 $ python -V
 Python 3.7.16
 
@@ -44,9 +45,7 @@ idna==3.4
 python-dotenv==0.21.1
 pytz==2023.3
 requests==2.28.2
-requests-toolbelt==0.10.1
-rt==3.0.5
-typing_extensions==4.5.0
+rt==2.2.2
 urllib3==1.26.15
 ```
 
