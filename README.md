@@ -104,3 +104,71 @@ if __name__ == "__main__":
 ```
 
 with the code you want to test and running the bot with `python bot.py`.
+
+# Arctic Bot Operations Manual
+
+Hello, intrepid Arctic Bot user, and welcome to my operations manual.
+Please watch your step and don't spend too much timing scratching your head if something doesn't make sense. Bryce probably forgot to document something.
+
+## About me
+
+I periodically poll two locations for relevant information to share in the #arcticbot Slack channel and pipe relevant information into the channel:
+
+1. RT for new correspondences (new tickets, correspondence on existing tickets)
+2. Metacat's `listObjects` endpoint for new EML Objects for new Registry submissions
+    
+    Note: New RT tickets are created for new EML Objects that come in through the Registry
+
+This effectively covers our bases so we can react to new work by watching just the #arcticbot channel.
+
+## Upkeep
+
+I'm just a single Python 3 script and my source is located at https://github.nceas.ucsb.edu/KNB/submissions-bot.
+
+- I live in /home/bot/submissions-bot
+
+    ```
+    mecum@arctica:~/$ ls /home/bot/submissions-bot -a1
+    .
+    ..
+    bot.py
+    .env                # deployment-specific settings
+    .git
+    .gitignore
+    LASTRUN
+    __pycache__
+    README.md
+    requirements.txt
+    token               # a long-lived auth token
+    ```
+
+- I can be configured via the `./.env` file located in the deployment folder
+- I make use of an authentication token which is stored in `./token`
+- I am run every 5 minutes via cron, under the user `bot` on arcticdata.io. 
+- I run in a virtual environment which can be created using `mkvirtualenv -p python3.7 bot` `pip install -r requirements.txt`
+- Below is the virtualenvwrapper config to use
+```
+# virtualenvwrapper config
+export WORKON_HOME=$HOME/.virtualenvs
+source /usr/share/virtualenvwrapper/virtualenvwrapper.sh
+```
+ 
+    Here's bot's crontab:
+
+    ```
+    MAILTO="jclark@nceas.ucsb.edu"
+    */5 * * * * . /home/bot/.virtualenvs/bot/bin/activate &&  python /home/bot/submissions-bot/bot.py >> /home/bot/submissions-bot/submissions-bot.log 2>&1
+    ```
+
+### Refreshing my authentication token
+
+If my authentication token expires (happens on a months-or-so scale), someone will need to log into arcticdata.io and update it:
+
+```sh
+$ ssh arcticdata.io
+...
+$ sudo -u bot -i # or some variant to get permission to write
+$ cd /home/bot/submissions-bot
+$ echo "{TOKEN}" > token
+```
+
