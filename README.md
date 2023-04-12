@@ -24,6 +24,32 @@ The bot then creates a ticket if a matching RT ticket is not found or comments o
   - [python-rt](https://gitlab.labs.nic.cz/labs/python-rt)
   - [pytz](https://github.com/newvem/pytz)
 
+- To try installing under Ubuntu 22.04 with python 3.7, install python from the deadsnakes PPA, then create a virtualenv for the app:
+
+```sh
+$ sudo add-apt-repository -P ppa:deadsnakes/ppa
+$ sudo apt update   
+$ sudo apt install python3.7
+$ sudo apt install python3.7-distutils
+$ mkvirtualenv -p python3.7 arcticbot
+$ python -V
+Python 3.7.16
+
+$ pip3 install -r requirements.txt
+$ pip3 freeze > requirements-py37.txt
+$ cat requirements-py37.txt
+certifi==2022.12.7
+charset-normalizer==3.1.0
+idna==3.4
+python-dotenv==0.21.1
+pytz==2023.3
+requests==2.28.2
+requests-toolbelt==0.10.1
+rt==3.0.5
+typing_extensions==4.5.0
+urllib3==1.26.15
+```
+
 ## Setup
 
 - Run `pip install -r requirements.txt`
