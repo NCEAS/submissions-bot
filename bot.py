@@ -15,7 +15,7 @@ import xml.etree.ElementTree as ET
 import requests
 import requests.sessions
 from dotenv import load_dotenv
-import rt
+from rt.rest1 import Rt
 import re
 import urllib
 
@@ -44,7 +44,7 @@ if TOKEN is None:
     raise Exception("Token was not readable, stopping bot operation.")
 
 # Log in to RT
-TRACKER = rt.Rt("{}/REST/1.0/".format(RT_URL), RT_USER, RT_PASS)
+TRACKER = Rt("{}/REST/1.0/".format(RT_URL), RT_USER, RT_PASS)
 
 if TRACKER.login() is False:
     send_message("I failed to log into RT. Something's wrong!")

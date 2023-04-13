@@ -1,4 +1,4 @@
 requests
 python-dotenv
-rt==2.2.2
+rt
 pytz
