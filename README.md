@@ -17,7 +17,7 @@ The bot then creates a ticket if a matching RT ticket is not found or comments o
 
 ## Dependencies
 
-- I have developed and tested this with Python 3.5.1
+- Currently running on Python 3.10.6
 - Extra packages (install via requirements.txt):
   - [requests](http://docs.python-requests.org/en/master/)
   - [python-dotenv](https://github.com/theskumar/python-dotenv)
@@ -25,27 +25,17 @@ The bot then creates a ticket if a matching RT ticket is not found or comments o
     - Currently requires version 2.2.2
   - [pytz](https://github.com/newvem/pytz)
 
-- To try installing under Ubuntu 22.04 with python 3.7, install python from the deadsnakes PPA, then create a virtualenv for the app:
+The `pip freeze` output is shown below.
 
-```sh
-$ sudo add-apt-repository -P ppa:deadsnakes/ppa
-$ sudo apt update   
-$ sudo apt install python3.7
-$ sudo apt install python3.7-distutils
-$ mkvirtualenv -p python3.7 bot
-$ python -V
-Python 3.7.16
-
-$ pip3 install -r requirements.txt
-$ pip3 freeze > requirements-py37.txt
-$ cat requirements-py37.txt
+```
 certifi==2022.12.7
 charset-normalizer==3.1.0
 idna==3.4
-python-dotenv==0.21.1
+python-dotenv==1.0.0
 pytz==2023.3
 requests==2.28.2
-rt==2.2.2
+requests-toolbelt==0.10.1
+rt==3.0.5
 urllib3==1.26.15
 ```
 
@@ -145,7 +135,7 @@ I'm just a single Python 3 script and my source is located at https://github.nce
 - I can be configured via the `./.env` file located in the deployment folder
 - I make use of an authentication token which is stored in `./token`
 - I am run every 5 minutes via cron, under the user `bot` on arcticdata.io. 
-- I run in a virtual environment which can be created using `mkvirtualenv -p python3.7 bot` `pip install -r requirements.txt`
+- I run in a virtual environment which can be created using `mkvirtualenv bot` `pip install -r requirements.txt`
 - Below is the virtualenvwrapper config to use
 ```
 # virtualenvwrapper config
