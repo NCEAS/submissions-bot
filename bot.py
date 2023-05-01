@@ -409,7 +409,7 @@ def create_ticket_text(pid, title):
 
 def ticket_reply(ticket_id, identifier):
     TRACKER.comment(ticket_id,
-                    text="PID {} was updated and needs moderation. If you aren't sure why this comment was made, please see the README at https://github.nceas.ucsb.edu/KNB/submissions-bot.".format(identifier))
+                    text="PID {} was updated and needs moderation. If you aren't sure why this comment was made, please see the README at https://github.com/NCEAS/submissions-bot.".format(identifier))
 
 
 def create_or_update_tickets(identifiers):

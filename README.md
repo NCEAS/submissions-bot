@@ -1,16 +1,16 @@
-# submissions-bot
+# 🤖 submissions bot
 
 Alerts a Slack channel (via webhook) of recently-modified objects from
-[`listObjects()`](http://jenkins-1.dataone.org/jenkins/job/API%20Documentation%20-%20trunk/ws/api-documentation/build/html/apis/MN_APIs.html#MNRead.listObjects) and creates tickets in
+[`listObjects()`](https://releases.dataone.org/online/api-documentation-v2.0.1/apis/MN_APIs.html#MNRead.listObjects) and creates tickets in
 [RT](https://www.bestpractical.com/rt-and-rtir) for new submissions and comments on already-created tickets.
 
 Note: If you're looking for deployment details about the bot, see the upkeep section below, which outlines things such as how the bot actually runs.
 
 ## How the bot works
 
-Every ten minutes, the bot visits the Member Node's [/object](http://jenkins-1.dataone.org/jenkins/job/API%20Documentation%20-%20trunk/ws/api-documentation/build/html/apis/MN_APIs.html#MNRead.listObjects) endpoint and asks for a list of the objects that have been modified in the last ten minutes.
+Every ten minutes, the bot visits the Member Node's [/object](https://releases.dataone.org/online/api-documentation-v2.0.1/apis/MN_APIs.html#MNRead.listObjects) endpoint and asks for a list of the objects that have been modified in the last ten minutes.
 Modifications include being created, updated, archived, or having a property of the object's system metadata modified (e.g., changing rights holder).
-This endpoint produces a list of PIDs, which the bot checks against a [whitelist](https://cn.dataone.org/cn/v2/accounts/CN=arctic-data-admins,DC=dataone,DC=org) of admin orcid Ids, and filters out any PIDs submitted by an admin.
+This endpoint produces a list of PIDs, which the bot checks against an [allowlist](https://cn.dataone.org/cn/v2/accounts/CN=arctic-data-admins,DC=dataone,DC=org) of admin orcid Ids, and filters out any PIDs submitted by an admin.
 For each filtered PID, the bot gets the first version of the PID in the obsolescence chain, and checks RT for a ticket that contains the first version PID in its title.
 For example, if the PID is 'arctic-data.1234.1', the bot looks for a ticket with 'arctic-data.1234' in the title.
 The bot then creates a ticket if a matching RT ticket is not found or comments on the existing ticket if one is found.
@@ -97,68 +97,70 @@ with the code you want to test and running the bot with `python bot.py`.
 
 # Arctic Bot Operations Manual
 
-Hello, intrepid Arctic Bot user, and welcome to my operations manual.
+🤖 Hello, intrepid Arctic Bot user, and welcome to my operations manual.
 Please watch your step and don't spend too much timing scratching your head if something doesn't make sense. Bryce probably forgot to document something.
 
 ## About me
 
-I periodically poll two locations for relevant information to share in the #arcticbot Slack channel and pipe relevant information into the channel:
+I was originally developed for the Arctic Data Center (ADC) to help us keep track of new submissions and correspondence on existing tickets. However, I could be used for Metacat instances other than the Arctic Data Center. Some of the information below is still specific to the ADC, but it should still help you get started.
+
+For the ADC, I periodically poll two locations for relevant information to share in a Slack channel the team made just for me. I post about:
 
 1. RT for new correspondences (new tickets, correspondence on existing tickets)
 2. Metacat's `listObjects` endpoint for new EML Objects for new Registry submissions
     
     Note: New RT tickets are created for new EML Objects that come in through the Registry
 
-This effectively covers our bases so we can react to new work by watching just the #arcticbot channel.
+This effectively covers our bases so we can react to new work by watching just the slack channel.
 
 ## Upkeep
 
-I'm just a single Python 3 script and my source is located at https://github.nceas.ucsb.edu/KNB/submissions-bot.
+I'm just a single Python 3 script and my source is located at https://github.com/NCEAS/submissions-bot.
 
-- I live in /home/bot/submissions-bot
+To start using me, you'll need to clone my repo and install my dependencies. Besides the files in my repo, I also need to add a few files to the deployment folder:
 
-    ```
-    mecum@arctica:~/$ ls /home/bot/submissions-bot -a1
+- In path/to/submissions-bot, you should have:
+```
     .
     ..
     bot.py
-    .env                # deployment-specific settings
+    .env                # ⭐️ deployment-specific settings
     .git
     .gitignore
     LASTRUN
     __pycache__
     README.md
     requirements.txt
-    token               # a long-lived auth token
-    ```
+    token               # ⭐️ a long-lived auth token
+```
 
 - I can be configured via the `./.env` file located in the deployment folder
 - I make use of an authentication token which is stored in `./token`
-- I am run every 5 minutes via cron, under the user `bot` on arcticdata.io. 
+- I am run every 5 minutes via cron. I should be set up as a user on the host machine.
 - I run in a virtual environment which can be created using `mkvirtualenv bot` `pip install -r requirements.txt`
-- Below is the virtualenvwrapper config to use
+- Below is the virtualenvwrapper config to use. (The paths may be different on your host.)
+
 ```
 # virtualenvwrapper config
 export WORKON_HOME=$HOME/.virtualenvs
 source /usr/share/virtualenvwrapper/virtualenvwrapper.sh
 ```
  
-    Here's bot's crontab:
+Here's bot's crontab:
 
-    ```
-    MAILTO="jclark@nceas.ucsb.edu"
-    */5 * * * * . /home/bot/.virtualenvs/bot/bin/activate &&  python /home/bot/submissions-bot/bot.py >> /home/bot/submissions-bot/submissions-bot.log 2>&1
-    ```
+```
+MAILTO="your-email-here@email.com"
+*/5 * * * * . /home/bot/.virtualenvs/bot/bin/activate &&  python path/to/submissions-bot/bot.py >> path/to/submissions-bot/submissions-bot.log 2>&1
+```
 
 ### Refreshing my authentication token
 
-If my authentication token expires (happens on a months-or-so scale), someone will need to log into arcticdata.io and update it:
+If my authentication token expires (happens on a months-or-so scale), someone will need to log into the host and update it. Assuming that `bot` is the user that runs me, the following commands should do the trick:
 
 ```sh
-$ ssh arcticdata.io
+$ ssh {HOST}
 ...
 $ sudo -u bot -i # or some variant to get permission to write
-$ cd /home/bot/submissions-bot
+$ cd path/to/submissions-bot
 $ echo "{TOKEN}" > token
 ```
-
